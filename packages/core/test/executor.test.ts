@@ -104,7 +104,9 @@ describe("The executor", () => {
         })
       })
       const terminateAfterMs = 400
-      await withOpenFlint({ dir, callTimeoutMs: 250, terminateAfterMs }, async (flint) => {
+      // The Node tier default is a fresh child per call, so a warm runner is asked for here: the healthy call
+      // below exists to leave the tier running, and it cannot do that against a child that is thrown away.
+      await withOpenFlint({ dir, callTimeoutMs: 250, terminateAfterMs, warmNodeRunners: 1 }, async (flint) => {
         const never = `${"a".repeat(40)}!`
         for (const name of ["quickjs_pattern", "node_pattern"]) {
           // The healthy call first, so the tier is already running and what is measured is the walk and its bound.

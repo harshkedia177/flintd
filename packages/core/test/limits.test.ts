@@ -117,7 +117,9 @@ describe("the limits of one call", () => {
         const began = Date.now()
         const both = await Promise.all([flint.call("watchdog_tool", { op }), flint.call("quick_tool", { op })])
         assert.deepEqual(both, [{ ok: true }, { ok: true }])
-        assert.ok(Date.now() - began < 200, `the ${op} pair took ${Date.now() - began} ms`)
+        // The watchdog sets a 60 s timer. What is under test is that neither call waits for it, so the bound is
+        // generous: a slow runner must not read as a held call.
+        assert.ok(Date.now() - began < 5000, `the ${op} pair took ${Date.now() - began} ms`)
       }
     })
   })
@@ -136,7 +138,8 @@ describe("the limits of one call", () => {
   })
 
   test("the Node tier caps its timers the same way", async () => {
-    await reopened({ callTimeoutMs: 250 }, async (flint) => {
+    // The save runs the Example, and a fresh child plus an import is a healthy call that would race a 250 ms clock.
+    await reopened({}, async (flint) => {
       await flint.call("tool_create", {
         name: "node_timer_tool",
         description: "Set and clear timers in a child process and report what happened.",
@@ -145,6 +148,8 @@ describe("the limits of one call", () => {
         examples: [{ args: { op: "clear" }, expected: { fired: false } }],
       })
       assert.equal((await flint.library()).find((one) => one.name === "node_timer_tool")?.tier, "node")
+    })
+    await reopened({ callTimeoutMs: 250 }, async (flint) => {
       const began = Date.now()
       const refused = await refusal(() => flint.call("node_timer_tool", { op: "long" }))
       assert.equal(refused.code, "timeout")

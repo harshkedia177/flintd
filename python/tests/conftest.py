@@ -16,7 +16,9 @@ from flintd import Flint
 
 ROOT = Path(__file__).resolve().parents[2]
 DAEMON = ROOT / "packages" / "daemon" / "bin" / "flintd.ts"
-DEADLINE_S = 20.0
+# A held-out run spawns a daemon, a model fake and a tier per Tool. A CI runner is several times slower than a
+# laptop at all of it, and this bound exists to fail a hang, not to measure speed.
+DEADLINE_S = float(os.environ.get("FLINTD_TEST_DEADLINE_S", "90"))
 
 SPLIT_LIST = {
     "name": "split_list",
