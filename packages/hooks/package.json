@@ -1,0 +1,55 @@
+{
+  "name": "@flintd/hooks",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The flintd hook scripts for agent harnesses.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshkedia177/flintd.git",
+    "directory": "packages/hooks"
+  },
+  "author": "flintd contributors",
+  "homepage": "https://github.com/harshkedia177/flintd",
+  "bugs": {
+    "url": "https://github.com/harshkedia177/flintd/issues"
+  },
+  "keywords": [
+    "ai-agents",
+    "agent-tools",
+    "tool-use",
+    "mcp",
+    "claude-code",
+    "codex"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "bin": {
+      "flintd-hook": "./dist/bin/flintd-hook.js"
+    }
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 test/hook.test.ts"
+  },
+  "bin": {
+    "flintd-hook": "./bin/flintd-hook.ts"
+  }
+}
