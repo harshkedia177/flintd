@@ -298,7 +298,9 @@ describe("retrieval", { concurrency: true }, () => {
       const model = fakeModel({
         cases: HELD_OUT_PASSES,
         embedding: true,
-        embedPauseMs: 400,
+        // Far longer than the 250 ms a search waits for a pass, so the two are told apart by a wide margin rather
+        // than by 45 ms of headroom that a slow machine eats.
+        embedPauseMs: 4000,
       })
       const flint = createFlint({ dir, model, stopGraceMs: 50, onLog: (entry) => logged.push(entry) })
       await flint.start()
@@ -306,7 +308,7 @@ describe("retrieval", { concurrency: true }, () => {
       const searched = Date.now()
       assert.deepEqual(names(await flint.find("count the words in a sentence")), ["word_count"])
       const waited = Date.now() - searched
-      assert.ok(waited < 350, `the search waited ${waited} ms for a pass that had not finished`)
+      assert.ok(waited < 2000, `the search waited ${waited} ms for a pass that had not finished`)
       await flint.stop()
     } finally {
       await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 20 })
