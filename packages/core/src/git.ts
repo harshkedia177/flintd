@@ -3,6 +3,7 @@ import { access } from "node:fs/promises"
 import { join } from "node:path"
 import { promisify } from "node:util"
 import { ToolError, causeMessage } from "./errors.ts"
+import { capBytes } from "./validate.ts"
 
 const run = promisify(execFile)
 
@@ -10,7 +11,11 @@ const GIT_TIMEOUT_MS = 5_000
 // An ssh remote can ask for a passphrase or a host key long after git's own prompt is off; the operator's own setting wins.
 const SSH_COMMAND = "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
 const GIT_MAX_OUTPUT_BYTES = 1024 * 1024
+// git's own words, enough to name the cause without putting a page of output in front of a model.
+const GIT_REASON_BYTES = 400
 const FIELD = "\u001f"
+// Passed to every git call, not only the ones that say `commit`: a merge writes one as well, and a machine with no
+// git identity of its own must not be able to break a Library. A read command ignores them.
 const IDENTITY = [
   "-c",
   "user.name=flintd",
@@ -42,7 +47,7 @@ export async function ensureRepository(dir: string): Promise<void> {
 
 export async function commit(dir: string, paths: string[], message: string, tree: string): Promise<Written> {
   await git(dir, ["add", "--", ...paths])
-  await git(dir, [...IDENTITY, "commit", "-m", message, "--", ...paths])
+  await git(dir, ["commit", "-m", message, "--", ...paths])
   const [version = "", written = ""] = lines(await git(dir, ["rev-parse", "HEAD", `HEAD:${tree}`], false))
   return { version, tree: written }
 }
@@ -112,7 +117,7 @@ export async function stage(dir: string, paths: string[]): Promise<void> {
 }
 
 export async function commitMerge(dir: string, message: string): Promise<void> {
-  await git(dir, [...IDENTITY, "commit", "--quiet", "-m", message])
+  await git(dir, ["commit", "--quiet", "-m", message])
 }
 
 export async function abortMerge(dir: string): Promise<void> {
@@ -179,7 +184,7 @@ export async function show(dir: string, id: string, path: string): Promise<strin
 
 async function git(dir: string, args: string[], trim = true, timeoutMs = GIT_TIMEOUT_MS): Promise<string> {
   try {
-    const { stdout } = await run("git", args, {
+    const { stdout } = await run("git", [...IDENTITY, ...args], {
       cwd: dir,
       timeout: timeoutMs,
       maxBuffer: GIT_MAX_OUTPUT_BYTES,
@@ -191,8 +196,11 @@ async function git(dir: string, args: string[], trim = true, timeoutMs = GIT_TIM
     if (typeof cause === "object" && cause !== null && (cause as { code?: unknown }).code === "ENOENT") {
       throw new ToolError("store_error", "git is not on the PATH, and flintd keeps every Library in a git repository.")
     }
-    throw new ToolError("store_error", `The Library repository at ${dir} refused \`git ${withoutPassword(args.join(" "))}\`.`, {
-      reason: withoutPassword(causeMessage(cause)),
-    })
+    const reason = withoutPassword(causeMessage(cause))
+    throw new ToolError(
+      "store_error",
+      `The Library repository at ${dir} refused \`git ${withoutPassword(args.join(" "))}\`: ${capBytes(reason, GIT_REASON_BYTES)}`,
+      { reason },
+    )
   }
 }
