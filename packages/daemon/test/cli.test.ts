@@ -173,7 +173,9 @@ test("the flintd binary answers --version and --help as a binary is expected to"
 
 // Before this, `init` wrote a harness config naming a port nothing listened on and printed `cat .../token` for a
 // token file that did not exist. A check and a dry run still start nothing: neither may change the machine.
-test("init starts a daemon, stop ends it, and neither a check nor a dry run starts one", async () => {
+// `init` starts a daemon only for a person at a terminal, and a test has none, so the daemon here is started the
+// way a script starts one. What is under test is that `stop` ends it and takes its files with it.
+test("stop ends the daemon serve started, and neither a check nor a dry run of init starts one", async () => {
   const home = await mkdtemp(join(tmpdir(), "flintd-autostart-"))
   const elsewhere = await mkdtemp(join(tmpdir(), "flintd-home-"))
   await writeFile(join(home, "config.json"), JSON.stringify({ port: 0 }))
@@ -182,21 +184,23 @@ test("init starts a daemon, stop ends it, and neither a check nor a dry run star
       await cli(home, ["init", "--harness", "codex", "--transcripts", "no", mode], { HOME: elsewhere })
       assert.equal(await readFile(join(home, "pid"), "utf8").catch(() => null), null, `${mode} started a daemon`)
     }
-    const stopped = await cli(home, ["stop"])
-    assert.equal(stopped.code, 0, stopped.err)
-    assert.match(stopped.out, /no flintd daemon is running/)
+    const quiet = await cli(home, ["stop"])
+    assert.equal(quiet.code, 0, quiet.err)
+    assert.match(quiet.out, /no flintd daemon is running/)
 
-    const written = await cli(home, ["init", "--harness", "codex", "--transcripts", "no"], { HOME: elsewhere })
-    assert.equal(written.code, 0, written.err)
+    const daemon = spawn(process.execPath, [...NODE_FLAGS, BIN, "serve"], {
+      env: { ...process.env, FLINTD_HOME: home, HOME: elsewhere },
+    })
+    await listeningOn(daemon)
     const port = Number((await readFile(join(home, "port"), "utf8")).trim())
     assert.ok(port > 0, "the daemon published no port")
-    assert.ok((await readFile(join(home, "token"), "utf8")).trim().length > 0, "no token for init to point at")
-    assert.match(written.out, new RegExp(`127\\.0\\.0\\.1:${port}`))
+    assert.ok((await readFile(join(home, "pid"), "utf8")).trim().length > 0, "the daemon published no pid")
 
     const ended = await cli(home, ["stop"])
     assert.equal(ended.code, 0, ended.err)
     assert.match(ended.out, /^stopped flintd \d+$/m)
     assert.equal(await readFile(join(home, "pid"), "utf8").catch(() => null), null, "stop left its pid file behind")
+    assert.equal(await readFile(join(home, "port"), "utf8").catch(() => null), null, "stop left its port file behind")
   } finally {
     await cli(home, ["stop"]).catch(() => undefined)
     await rm(home, { recursive: true, force: true })
