@@ -1,0 +1,131 @@
+name: publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: the version every manifest must already carry, such as 0.1.0
+        required: true
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      # A version on npm or PyPI is permanent, so the release says which one it is and every file that carries a
+      # version has to agree. Everything that can fail runs here, before either registry job publishes anything.
+      - name: the release names the version every file carries
+        env:
+          EXPECTED: ${{ inputs.version || github.ref_name }}
+        run: |
+          node --input-type=module -e '
+            import { readdirSync, readFileSync } from "node:fs"
+            const expected = process.env.EXPECTED.replace(/^v/, "")
+            for (const dir of readdirSync("packages")) {
+              const { name, version } = JSON.parse(readFileSync(`packages/${dir}/package.json`, "utf8"))
+              if (version !== expected) throw new Error(`${name} is ${version} and the release is ${expected}`)
+            }
+            const constant = readFileSync("packages/daemon/src/version.ts", "utf8").match(/VERSION = "(.+)"/)[1]
+            if (constant !== expected) throw new Error(`the MCP server version is ${constant} and the release is ${expected}`)
+            const extension = readFileSync("packages/pi/src/index.ts", "utf8").match(/VERSION = "(.+)"/)[1]
+            if (extension !== expected) throw new Error(`the pi extension version is ${extension} and the release is ${expected}`)
+            const python = readFileSync("python/pyproject.toml", "utf8").match(/^version = "(.+)"$/m)[1]
+            if (python !== expected) throw new Error(`the Python client is ${python} and the release is ${expected}`)
+            const changelog = readFileSync("CHANGELOG.md", "utf8")
+            if (!changelog.includes(`\n## ${expected}\n`)) throw new Error(`CHANGELOG.md has no "## ${expected}" heading and the release is ${expected}`)
+          '
+      - run: pnpm install --frozen-lockfile
+      # `pnpm build` is what writes the Bundle and every dist/ a published package points at, and `prepare` does not
+      # run for a tarball, so a publish without it ships nothing.
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm example
+      # A version on npm is permanent, so the tarballs are installed and run before one is published, not after.
+      - name: the five tarballs install and answer
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm -r pack --pack-destination "$RUNNER_TEMP/tarballs"
+          mkdir -p "$RUNNER_TEMP/install" "$RUNNER_TEMP/home"
+          cd "$RUNNER_TEMP/install"
+          npm init -y > /dev/null
+          # The workspace root is private and packs the repository, so it is never one of the five.
+          npm install --no-audit --no-fund "$RUNNER_TEMP"/tarballs/flintd-{core,hooks,sdk,pi}-*.tgz "$RUNNER_TEMP"/tarballs/flintd-[0-9]*.tgz
+          # `flintd` with no command prints its usage and exits 2, which is what an operator's first run does.
+          usage="$(./node_modules/.bin/flintd 2>&1 || true)"
+          grep -q "flintd serve" <<< "$usage"
+          node -e 'import("@flintd/sdk").then(({ createFlint }) => { if (typeof createFlint !== "function") throw new Error("the SDK entry has no createFlint") })'
+          echo '{}' | ./node_modules/.bin/flintd-hook claude-code
+          HOME="$RUNNER_TEMP/home" FLINTD_HOME="$RUNNER_TEMP/home/.flintd" ./node_modules/.bin/flintd init --harness claude-code --dry-run
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+      # PyPI never lets a version be replaced, so the Python gate runs here and not only in gate.yml. It drives a
+      # daemon this suite starts, so it runs after the workspace and the Bundle are built.
+      - run: uv run pytest
+        working-directory: python
+      - run: uv run ruff check
+        working-directory: python
+      - run: uv run ruff format --check
+        working-directory: python
+      - run: uv run mypy --strict src tests examples
+        working-directory: python
+      - run: uv build
+        working-directory: python
+
+  # npm and pypi are siblings, not a chain: neither registry can roll the other back, so a failure in one must not
+  # decide whether the other ever runs. Both hold publish steps alone; everything that can fail ran in the gate.
+  npm:
+    name: npm
+    needs: gate
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # `--provenance` signs each tarball against this run's OIDC token, which is what `id-token: write` grants.
+      # `flintd` depends on all four, and packages/sdk keeps a devDependency on `flintd` for the daemon its tests
+      # drive, so the workspace holds one cycle and no topological sort covers both. The libraries go first.
+      - run: pnpm --filter "@flintd/*" publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: pnpm --filter flintd publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  pypi:
+    name: pypi
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+      - run: uv build
+        working-directory: python
+      - run: uv publish
+        working-directory: python
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}

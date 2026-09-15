@@ -1,0 +1,91 @@
+name: gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    name: node ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The Bundle is built, not committed, and every lane needs it. `pnpm install` runs the same script through
+      # `prepare`; this line is the one that does not depend on that.
+      - run: pnpm build
+      # `pnpm typecheck` is the root tsconfig and evals/, which no package test imports and no other lane reads.
+      - run: pnpm typecheck
+      # All core lanes, then the daemon and the sdk: `pnpm test` in packages/core is test:fast, test:tiers,
+      # test:container and test:store. No runner here has an OCI engine, so test:container skips every test and the
+      # container tier is covered by a developer machine and by the evals lane, never by this gate.
+      - run: pnpm test
+      - run: pnpm example
+
+  install:
+    name: pack and install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # The dev tree resolves paths a published install does not, so the gate installs what it would publish and
+      # runs it: the CLI, the SDK entry, the hook binary and the init every quickstart starts with.
+      - name: the five tarballs install and answer
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm -r pack --pack-destination "$RUNNER_TEMP/tarballs"
+          mkdir -p "$RUNNER_TEMP/install" "$RUNNER_TEMP/home"
+          cd "$RUNNER_TEMP/install"
+          npm init -y > /dev/null
+          # The workspace root is private and packs the repository, so it is never one of the five.
+          npm install --no-audit --no-fund "$RUNNER_TEMP"/tarballs/flintd-{core,hooks,sdk,pi}-*.tgz "$RUNNER_TEMP"/tarballs/flintd-[0-9]*.tgz
+          # `flintd` with no command prints its usage and exits 2, which is what an operator's first run does.
+          usage="$(./node_modules/.bin/flintd 2>&1 || true)"
+          grep -q "flintd serve" <<< "$usage"
+          node -e 'import("@flintd/sdk").then(({ createFlint }) => { if (typeof createFlint !== "function") throw new Error("the SDK entry has no createFlint") })'
+          echo '{}' | ./node_modules/.bin/flintd-hook claude-code
+          HOME="$RUNNER_TEMP/home" FLINTD_HOME="$RUNNER_TEMP/home/.flintd" ./node_modules/.bin/flintd init --harness claude-code --dry-run
+
+  python:
+    name: python client
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      # The gate tests drive a daemon this suite starts, so the workspace and the Bundle have to be there.
+      - run: pnpm install --frozen-lockfile
+        working-directory: .
+      - run: pnpm build
+        working-directory: .
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+      - run: uv run pytest
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run mypy --strict src tests examples
