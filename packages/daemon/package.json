@@ -1,0 +1,67 @@
+{
+  "name": "flintd",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The flintd daemon and CLI: one local server that gives every agent harness on the machine the same library of tools.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshkedia177/flintd.git",
+    "directory": "packages/daemon"
+  },
+  "author": "flintd contributors",
+  "homepage": "https://github.com/harshkedia177/flintd",
+  "bugs": {
+    "url": "https://github.com/harshkedia177/flintd/issues"
+  },
+  "keywords": [
+    "ai-agents",
+    "agent-tools",
+    "tool-use",
+    "mcp",
+    "mcp-server",
+    "sandbox"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "flintd": "./bin/flintd.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm run test:cli && pnpm run test:http",
+    "test:cli": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 test/cli.test.ts test/cli-connect.test.ts test/cli-token.test.ts",
+    "test:http": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 $(ls test/*.test.ts | grep -vE 'test/(cli|cli-connect|cli-token)\\.test\\.ts$')"
+  },
+  "dependencies": {
+    "@flintd/core": "workspace:*",
+    "@flintd/hooks": "workspace:*",
+    "@flintd/sdk": "workspace:*",
+    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      }
+    },
+    "bin": {
+      "flintd": "./dist/bin/flintd.js"
+    }
+  }
+}
