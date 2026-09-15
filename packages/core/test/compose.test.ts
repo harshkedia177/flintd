@@ -268,17 +268,15 @@ describe("composition", () => {
     })
   })
 
+  // Counted, not timed: how long a nested call takes is the machine's business, and how many runners a chain
+  // starts is flintd's. The wall clock said the same thing until a slow runner made the first call cheap enough
+  // that four more looked expensive beside it.
   test("a Body that calls a Tool five times in a row pays for one runner, not five", async () => {
-    const took = async (times: number): Promise<number> => {
-      const began = Date.now()
-      await flint.call("fanout_tool", { times })
-      return Date.now() - began
-    }
-    await took(1)
-    const one = await took(1)
-    const five = await took(5)
-    // The first nested call of a chain starts a runner; the four after it must find that runner still there.
-    assert.ok(five - one < one, `one nested call took ${one} ms and five took ${five} ms`)
+    const workers = (): number => (process.report.getReport() as { workers: unknown[] }).workers.length
+    await flint.call("fanout_tool", { times: 1 })
+    const afterOne = workers()
+    await flint.call("fanout_tool", { times: 5 })
+    assert.equal(workers(), afterOne, `five nested calls started ${workers() - afterOne} runner(s) beyond the first`)
   })
 
   test("a chain leaves no worker behind: only the lane every call shares keeps one", async () => {
