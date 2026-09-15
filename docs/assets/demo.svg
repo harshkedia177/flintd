@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 356" width="1000" height="356" role="img"
+     aria-label="A terminal session: tool_create is refused because the Body disagrees with its own Example, the model fixes it, the Tool saves as a Draft, and the next call returns a result.">
+  <style>
+    .chrome { fill: #161b22; }
+    .panel  { fill: #0d1117; stroke: #30363d; }
+    .title  { font-family: ui-sans-serif, -apple-system, "Segoe UI", Helvetica, sans-serif;
+               font-size: 12.5px; fill: #8b949e; text-anchor: middle; }
+    text.line { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px;
+                 opacity: 0; animation: in 13s ease-out infinite; }
+    .dollar { fill: #56d364; }
+    .cmd { fill: #c9d1d9; }
+    .err { fill: #f85149; }
+    .dim { fill: #8b949e; }
+    .ok  { fill: #7ee787; }
+    .cmt { fill: #6e7681; font-style: italic; }
+    @keyframes in {
+      0%   { opacity: 0 }
+      3%   { opacity: 1 }
+      88%  { opacity: 1 }
+      94%  { opacity: 0 }
+      100% { opacity: 0 }
+    }
+    @media (prefers-reduced-motion: reduce) { text.line { animation: none; opacity: 1 } }
+  </style>
+
+  <rect x="0.5" y="0.5" width="999" height="355" rx="10" class="panel"/>
+  <path d="M0.5 10.5 a10 10 0 0 1 10 -10 h979 a10 10 0 0 1 10 10 v33 h-999 z" class="chrome"/>
+  <circle cx="24" cy="22" r="5.5" fill="#ff5f57"/>
+  <circle cx="44" cy="22" r="5.5" fill="#febc2e"/>
+  <circle cx="64" cy="22" r="5.5" fill="#28c840"/>
+  <text x="500" y="26" class="title">flintd: a Tool is tested before anything can call it</text>
+
+  <text x="34" y="74" class="line cmd" style="animation-delay:0.35s"><tspan class="dollar">$</tspan> flintd call tool_create '{"name":"word_count", ...}'</text>
+  <text x="34" y="122" class="line err" style="animation-delay:0.90s">example_failed: Example 0 expected {"count":3} and the Body returned {"count":4}.</text>
+  <text x="34" y="146" class="line dim" style="animation-delay:1.45s">Nothing was saved. Fix the Body, or correct the Example, and send it again.</text>
+  <text x="34" y="194" class="line cmd" style="animation-delay:2.00s"><tspan class="dollar">$</tspan> flintd call tool_create '{"name":"word_count", ...}'</text>
+  <text x="34" y="218" class="line cmt" style="animation-delay:2.55s">  the model reads that and fixes the Body</text>
+  <text x="34" y="242" class="line ok" style="animation-delay:2.90s">{ "name": "word_count", "state": "draft", "tier": "quickjs" }</text>
+  <text x="34" y="290" class="line cmd" style="animation-delay:3.45s"><tspan class="dollar">$</tspan> flintd call word_count '{"text":"the quick brown fox"}'</text>
+  <text x="34" y="314" class="line ok" style="animation-delay:4.00s">{ "count": 4 }</text>
+</svg>
