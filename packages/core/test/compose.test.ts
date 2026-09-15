@@ -5,7 +5,7 @@ import { rm } from "node:fs/promises"
 import { after, before, describe, test } from "node:test"
 import { createFlint } from "../src/index.ts"
 import type { Flint } from "../src/index.ts"
-import { refusal, temporaryLibrary, waitFor, withFlint } from "./support.ts"
+import { refusal, temporaryLibrary, waitFor, withFlint, withOpenFlint } from "./support.ts"
 
 
 const RELAY_PARAMETERS = JSON.stringify({
@@ -250,18 +250,22 @@ describe("composition", () => {
     )
   })
 
+  // A save runs the Tool's own Examples, and those are healthy calls. Under the 250 ms clock this test needs they
+  // race it on a loaded machine, so the Library is written with ordinary limits and read back with the tight one.
   test("a callee that never answers cannot make the caller outlive its own timeout", async () => {
-    await withFlint(
-      async (tight) => {
-        await tight.call("tool_create", HOG)
-        await tight.call("tool_create", WAIT_THROUGH)
-        const began = Date.now()
-        const refused = await refusal(() => tight.call("wait_through", { ms: 30_000 }))
-        assert.equal(refused.code, "timeout")
-        assert.ok(Date.now() - began < 2000, `the call took ${Date.now() - began} ms`)
-      },
-      { callTimeoutMs: 250 },
-    )
+    const dir = await temporaryLibrary()
+    await withOpenFlint({ dir }, async (flint) => {
+      await flint.call("tool_create", HOG)
+      await flint.call("tool_create", WAIT_THROUGH)
+    })
+    await withOpenFlint({ dir, callTimeoutMs: 250 }, async (tight) => {
+      const began = Date.now()
+      const refused = await refusal(() => tight.call("wait_through", { ms: 30_000 }))
+      assert.equal(refused.code, "timeout")
+      // The callee asked for 30 s. Anything near that means the caller waited for it; the bound is generous on
+      // purpose, because what is under test is that the caller stopped, not how fast a runner starts.
+      assert.ok(Date.now() - began < 10_000, `the call took ${Date.now() - began} ms`)
+    })
   })
 
   test("a Body that calls a Tool five times in a row pays for one runner, not five", async () => {
