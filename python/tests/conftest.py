@@ -16,9 +16,10 @@ from flintd import Flint
 
 ROOT = Path(__file__).resolve().parents[2]
 DAEMON = ROOT / "packages" / "daemon" / "bin" / "flintd.ts"
-# A held-out run spawns a daemon, a model fake and a tier per Tool. A CI runner is several times slower than a
-# laptop at all of it, and this bound exists to fail a hang, not to measure speed.
-DEADLINE_S = float(os.environ.get("FLINTD_TEST_DEADLINE_S", "90"))
+# This bound exists to fail a hang, not to measure speed: a healthy Held-out run finishes in about a second, and a
+# CI runner is a few times slower. Raise it with the environment rather than by editing, so a slow machine never
+# reads as a broken one.
+DEADLINE_S = float(os.environ.get("FLINTD_TEST_DEADLINE_S", "30"))
 
 SPLIT_LIST = {
     "name": "split_list",
@@ -77,8 +78,12 @@ class FakeModel(BaseHTTPRequestHandler):
 
 def written(asked: dict[str, Any]) -> str:
     text = "\n".join(str(one.get("content", "")) for one in asked.get("messages", []))
-    if "judge" in text:
-        return json.dumps({"plausible": True, "reason": "the result is what the Tool promises."})
+    # Match the opening sentence each prompt carries, not a word that may appear in any of them. A bare "judge"
+    # caught the generator too, once its prompt started mentioning what the judge does.
+    if "You judge one refusal" in text:
+        return json.dumps({"accepted": True, "clause": "", "reason": "the description takes arguments like these."})
+    if "You judge one result" in text:
+        return json.dumps({"plausible": True, "clause": "", "reason": "the result is what the Tool promises."})
     for name, cases in HELD_OUT.items():
         if f"Tool: {name}\n" in text:
             return json.dumps(
