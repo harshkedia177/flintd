@@ -82,7 +82,7 @@ jobs:
         working-directory: .
       - run: pnpm build
         working-directory: .
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: "3.12"
       - run: uv run pytest

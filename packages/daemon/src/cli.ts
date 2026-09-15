@@ -348,16 +348,24 @@ async function runInitCommand(values: {
   // A check reads and never writes, so it never asks the one question an init asks.
   const transcripts = check ? held : await transcriptAnswer(values.transcripts, harness, held)
   if (transcripts === undefined) return usage("A --transcripts is yes or no.")
+  const writing = !check && !dryRun
+  // Only a person at a terminal gets a daemon started for them. A script, a test or a CI job that runs `init` asked
+  // for one command, not for a background service it never agreed to and cannot see.
+  const port = await daemonPort(home, config.port, writing && process.stdout.isTTY === true)
   const report = await runInit({
     harness,
     scope,
     transcripts,
     home,
     cwd: process.cwd(),
-    port: await daemonPort(home, config.port, !check && !dryRun),
+    port,
     mode: check ? "check" : dryRun ? "dry-run" : "write",
   })
   if (values.json === true) return write(report as unknown as JsonValue)
+  // A harness config naming a port nothing answers on is the failure a person finds much later, in their agent.
+  if (writing && !(await answers(port))) {
+    process.stderr.write(`Nothing is listening on ${report.mcpUrl}. Start the daemon with \`flintd serve\`.\n`)
+  }
   for (const edit of report.edits) {
     const said =
       edit.action === "incomplete"

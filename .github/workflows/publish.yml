@@ -69,7 +69,7 @@ jobs:
           node -e 'import("@flintd/sdk").then(({ createFlint }) => { if (typeof createFlint !== "function") throw new Error("the SDK entry has no createFlint") })'
           echo '{}' | ./node_modules/.bin/flintd-hook claude-code
           HOME="$RUNNER_TEMP/home" FLINTD_HOME="$RUNNER_TEMP/home/.flintd" ./node_modules/.bin/flintd init --harness claude-code --dry-run
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: "3.12"
       # PyPI never lets a version be replaced, so the Python gate runs here and not only in gate.yml. It drives a
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: "3.12"
       - run: uv build
