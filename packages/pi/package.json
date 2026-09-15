@@ -1,0 +1,61 @@
+{
+  "name": "@flintd/pi",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The flintd extension for the pi harness.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshkedia177/flintd.git",
+    "directory": "packages/pi"
+  },
+  "author": "flintd contributors",
+  "homepage": "https://github.com/harshkedia177/flintd",
+  "bugs": {
+    "url": "https://github.com/harshkedia177/flintd/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "ai-agents",
+    "agent-tools",
+    "tool-use",
+    "mcp",
+    "extension"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 test/extension.test.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.0.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.85.1"
+  }
+}
