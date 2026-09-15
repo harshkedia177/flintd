@@ -1,0 +1,250 @@
+[
+  {
+    "id": "word_count",
+    "kind": "pure",
+    "prompt": "Count the words in a piece of text. The only argument is `text`, a string. A word is a run of characters separated by whitespace. Return the count as a number.",
+    "probe": {
+      "text": "one two  three\nfour"
+    },
+    "expect": 4
+  },
+  {
+    "id": "roman_numeral",
+    "kind": "pure",
+    "prompt": "Convert a whole number from 1 to 3999 into an upper-case Roman numeral. The only argument is `value`, an integer from 1 to 3999. Return the numeral as a string, for example 1987 is \"MCMLXXXVII\".",
+    "probe": {
+      "value": 1987
+    },
+    "expect": "MCMLXXXVII"
+  },
+  {
+    "id": "luhn_check",
+    "kind": "pure",
+    "prompt": "Say whether a card-like number passes the Luhn checksum. The only argument is `number`, a string of digits that may hold spaces and hyphens. Return true or false. A string that holds no digit at all is false. A string whose digits are all zero has a checksum of zero, which passes, so it is true.",
+    "probe": {
+      "number": "4539 5787 6362 1486"
+    },
+    "expect": true
+  },
+  {
+    "id": "duration_format",
+    "kind": "pure",
+    "prompt": "Write a whole number of seconds as a short duration. The only argument is `seconds`, a whole number of 0 or more. Return a string that holds only the parts that are not zero, largest first, joined by one space, using the units h, m and s, for example 3723 is \"1h 2m 3s\" and 0 is \"0s\".",
+    "probe": {
+      "seconds": 3723
+    },
+    "expect": "1h 2m 3s"
+  },
+  {
+    "id": "slugify",
+    "kind": "pure",
+    "prompt": "Turn a line of text into a URL slug. The only argument is `text`, a string. Lower-case it, replace every run of characters that are not the ASCII letters a-z or the digits 0-9 with one hyphen, and remove a leading and a trailing hyphen. An accented letter such as é, and every letter of every other script, is not one of those ASCII letters, so it is replaced like any other character and is never turned into an ASCII letter. Return the slug as a string.",
+    "probe": {
+      "text": "Hello, World! 2026 Edition"
+    },
+    "expect": "hello-world-2026-edition"
+  },
+  {
+    "id": "base64_decode",
+    "kind": "pure",
+    "prompt": "Decode a base64 string into UTF-8 text. The only argument is `encoded`, a base64 string. Use the Node builtin `node:buffer`, which you may import with `await import(\"node:buffer\")`. Return the decoded text as a string.",
+    "probe": {
+      "encoded": "aGVsbG8gZmxpbnRk"
+    },
+    "expect": "hello flintd"
+  },
+  {
+    "id": "zod_validate",
+    "kind": "bundle",
+    "prompt": "Check that an object holds a string `name` and a whole number `age` of 0 or more. The Tool takes exactly one top-level argument, named `record`, and its value is the object to check. parameters_json declares `record` and nothing else, and it declares it as {\"type\": \"object\", \"additionalProperties\": true} with no \"properties\" and no \"required\": this Tool is given records that are wrong on purpose, and an argument schema that pins the fields would refuse them before the Tool ever ran. `name` and `age` are fields of `record` and never arguments of the Tool, so every Example passes the arguments as {\"record\": {\"name\": ..., \"age\": ...}}. Build the check with `zod`, which you may import with `await import(\"zod\")`. Return {\"valid\": true} when the record passes. Return {\"valid\": false, \"issues\": [<one string for each field that failed>]} when it does not, where each string is the name of the failing field on its own, such as \"name\", in the order zod reports them.",
+    "probe": {
+      "record": {
+        "name": "ada",
+        "age": 36
+      }
+    },
+    "expect": {
+      "valid": true
+    }
+  },
+  {
+    "id": "yaml_to_json",
+    "kind": "bundle",
+    "prompt": "Parse YAML text into a JSON value. The only argument is `text`, a YAML document as a string. Use the `yaml` package, which you may import with `await import(\"yaml\")`. It implements YAML 1.2, where only `true` and `false` are booleans and `yes`, `no`, `on` and `off` stay plain strings. Return the parsed value.",
+    "probe": {
+      "text": "name: ada\ntags:\n  - one\n  - two\n"
+    },
+    "expect": {
+      "name": "ada",
+      "tags": [
+        "one",
+        "two"
+      ]
+    }
+  },
+  {
+    "id": "days_between",
+    "kind": "bundle",
+    "prompt": "Count the whole days between two dates. The arguments are `from` and `to`, each an ISO date string such as \"2026-01-01\". Use the `date-fns` package, which you may import with `await import(\"date-fns\")`. Return the count as a number, negative when `to` is before `from`.",
+    "probe": {
+      "from": "2026-01-01",
+      "to": "2026-03-01"
+    },
+    "expect": 59
+  },
+  {
+    "id": "csv_to_rows",
+    "kind": "bundle",
+    "prompt": "Parse CSV text with a header row into a list of objects. The only argument is `csv`, a string. Use the `papaparse` package, which has one default export and you may import with `const Papa = (await import(\"papaparse\")).default`. Leave every value as the string the file holds; do not convert a digit run into a number. The newline at the end of the text ends the last row and never starts another one, so the list holds one object for each line that carries data and no empty object after them. Return the list of row objects.",
+    "probe": {
+      "csv": "name,age\nada,36\ngrace,45\n"
+    },
+    "expect": [
+      {
+        "name": "ada",
+        "age": "36"
+      },
+      {
+        "name": "grace",
+        "age": "45"
+      }
+    ]
+  },
+  {
+    "id": "markdown_headings",
+    "kind": "bundle",
+    "prompt": "List the headings of a Markdown document. The only argument is `markdown`, a string. Use the `marked` package, which you may import with `await import(\"marked\")`, and walk the tokens its lexer produces rather than the HTML it renders. Return a list of `{\"depth\": <the heading level as a number>, \"text\": <the heading text as a string>}`, in document order, and an empty list when there is no heading.",
+    "probe": {
+      "markdown": "# Title\n\nsome **bold** text\n\n## Second\n"
+    },
+    "expect": [
+      {
+        "depth": 1,
+        "text": "Title"
+      },
+      {
+        "depth": 2,
+        "text": "Second"
+      }
+    ]
+  },
+  {
+    "id": "link_hrefs",
+    "kind": "bundle",
+    "prompt": "Collect every link target in a piece of HTML. The only argument is `html`, a string. Use the `cheerio` package, which you may import with `await import(\"cheerio\")`. Return the list of `href` values of every `<a>` element, in document order. An `<a>` that carries no `href` at all contributes nothing to the list; an `<a>` whose `href` is the empty string contributes the empty string.",
+    "probe": {
+      "html": "<ul><li><a href=\"/one\">one</a></li><li><a>none</a></li><li><a href=\"https://example.com/two\">two</a></li></ul>"
+    },
+    "expect": [
+      "/one",
+      "https://example.com/two"
+    ]
+  },
+  {
+    "id": "deep_names",
+    "kind": "bundle",
+    "prompt": "Collect every `name` field at any depth of a JSON document. The Tool takes exactly one top-level argument, named `document`, and its value is any JSON value: parameters_json declares `document` and nothing else, and every Example passes the arguments as {\"document\": <the value>}. Use the `jsonpath-plus` package, which you may import with `const { JSONPath } = await import(\"jsonpath-plus\")`, and give it the fixed path `$..name`. Return the list of values found, in the order JSONPath returns them, which is the order this Tool promises and which you must not re-sort.",
+    "probe": {
+      "document": {
+        "name": "root",
+        "children": [
+          {
+            "name": "left"
+          },
+          {
+            "name": "right"
+          }
+        ]
+      }
+    },
+    "expect": [
+      "root",
+      "left",
+      "right"
+    ]
+  },
+  {
+    "id": "file_line_count",
+    "kind": "fs",
+    "prompt": "Count the lines of a text file in the Tool's own workspace directory. The only argument is `path`, a path relative to that directory. Declare the Manifest {\"fs\": \"workspace\"} and read the file with `await ctx.fs.read(path)`. Return the number of lines as a number, counting a trailing newline as ending the last line and not as starting an empty one. The workspace directory holds exactly this tree, and nothing else, when the Tool is saved:\n  README.md   3 lines: \"# workspace\", \"the second line\", \"the third line\"\n  notes.txt   3 lines: \"the first line\", \"the second line\", \"the third line\"\n  log.txt     1 line: \"the first entry\"\n  data.csv    3 lines: \"name,age\", \"ada,36\", \"grace,45\"\n  hash.txt    1 line: \"the line only this file holds\"\n  notes/      a directory holding one file, a.txt, of 2 lines: \"alpha\", \"beta\"\nEvery file ends with a newline. Write every Example against a path that is really in that tree, and never invent a file or a directory: a path that is not there is refused and nothing is saved.",
+    "probe": {
+      "path": "README.md"
+    },
+    "expect": 3
+  },
+  {
+    "id": "append_line",
+    "kind": "fs",
+    "prompt": "Append one line to a file in the Tool's own workspace directory and say how many lines the file then holds. The arguments are `path`, a path relative to that directory, and `line`, the text to append. Declare the Manifest {\"fs\": \"workspace\"} and use `await ctx.fs.read(path)` and `await ctx.fs.write(path, text)`. Append the line with a newline after it and return the new line count as a number. Append only to a file that is already in the tree below; this Tool never creates a file and never creates a directory. The workspace directory holds exactly this tree, and nothing else, when the Tool is saved:\n  README.md   3 lines: \"# workspace\", \"the second line\", \"the third line\"\n  notes.txt   3 lines: \"the first line\", \"the second line\", \"the third line\"\n  log.txt     1 line: \"the first entry\"\n  data.csv    3 lines: \"name,age\", \"ada,36\", \"grace,45\"\n  hash.txt    1 line: \"the line only this file holds\"\n  notes/      a directory holding one file, a.txt, of 2 lines: \"alpha\", \"beta\"\nEvery file ends with a newline. Write every Example against \"log.txt\", the one file no other Tool changes, and never invent a file or a directory: a path that is not there is refused and nothing is saved. Your Examples run in the order you write them and each one really appends, so the count the second Example expects is one more than the count the first one expects.",
+    "probe": {
+      "path": "log.txt",
+      "line": "an appended line"
+    }
+  },
+  {
+    "id": "list_workspace",
+    "kind": "fs",
+    "prompt": "List the file names in a directory of the Tool's own workspace. The only argument is `dir`, a path relative to that directory. Declare the Manifest {\"fs\": \"workspace\"} and use `await ctx.fs.list(dir)`, which answers a list of `{name, kind}` where kind is \"file\" or \"directory\". Return the list of names whose kind is \"file\", and nothing else, sorted by JavaScript's own string order, which puts every upper-case letter before every lower-case one, so \"README.md\" comes before \"data.csv\". The workspace directory holds exactly this tree, and nothing else, when the Tool is saved:\n  README.md   3 lines: \"# workspace\", \"the second line\", \"the third line\"\n  notes.txt   3 lines: \"the first line\", \"the second line\", \"the third line\"\n  log.txt     1 line: \"the first entry\"\n  data.csv    3 lines: \"name,age\", \"ada,36\", \"grace,45\"\n  hash.txt    1 line: \"the line only this file holds\"\n  notes/      a directory holding one file, a.txt, of 2 lines: \"alpha\", \"beta\"\nEvery file ends with a newline. Write every Example against a path that is really in that tree, and never invent a file or a directory: a path that is not there is refused and nothing is saved. Write your Examples against \"notes\", which holds one file and which no other Tool writes to; the top directory gains files while other Tools run, so an Example against \".\" cannot stay true.",
+    "probe": {
+      "dir": "notes"
+    },
+    "expect": [
+      "a.txt"
+    ]
+  },
+  {
+    "id": "fetch_status",
+    "kind": "network",
+    "prompt": "Read a service's state over HTTP. The Tool takes no arguments. Declare the Manifest {\"hosts\": [\"127.0.0.1\"]} and call `await ctx.fetch(\"{{fixture}}/status\")`, which answers `{status, headers, body}` with `body` already parsed as JSON. That service answers exactly `{\"state\": \"green\", \"checked\": 7}` every time, so write your Examples against it. Return the `state` field of that body as a string, which is therefore \"green\".",
+    "probe": {},
+    "expect": "green"
+  },
+  {
+    "id": "echo_post",
+    "kind": "network",
+    "prompt": "Send a message to a service and return what it says back. The only argument is `message`, a string. Declare the Manifest {\"hosts\": [\"127.0.0.1\"]} and POST `JSON.stringify({message})` to `{{fixture}}/echo` with `await ctx.fetch(url, {method: \"POST\", headers: {\"content-type\": \"application/json\"}, body})`. The answer is `{status, headers, body}` with `body` already parsed as JSON. That service answers exactly `{\"echo\": <the message you sent>, \"received\": true}` every time, so write your Examples against it. Return the `echo` field of that body as a string, which is therefore the message you sent.",
+    "probe": {
+      "message": "flintd"
+    },
+    "expect": "flintd"
+  },
+  {
+    "id": "total_words",
+    "kind": "composition",
+    "requires": "word_count",
+    "prompt": "Count the words across several pieces of text. The only argument is `texts`, a list of strings. Do not count the words yourself: call the Tool named \"{{requires}}\" once for each text with `await ctx.callTool(\"{{requires}}\", {text})`, which answers the count for that text, and add the answers up. Return the total as a number.",
+    "probe": {
+      "texts": [
+        "one two",
+        "three four five"
+      ]
+    },
+    "expect": 5
+  },
+  {
+    "id": "roman_years",
+    "kind": "composition",
+    "requires": "roman_numeral",
+    "prompt": "Write a list of years as Roman numerals. The only argument is `years`, a list of whole numbers from 1 to 3999. Do not convert them yourself: call the Tool named \"{{requires}}\" once for each year with `await ctx.callTool(\"{{requires}}\", {value})`. Return the list of numerals, in the same order.",
+    "probe": {
+      "years": [
+        1987,
+        2026
+      ]
+    },
+    "expect": [
+      "MCMLXXXVII",
+      "MMXXVI"
+    ]
+  },
+  {
+    "id": "exec_sha256",
+    "kind": "exec",
+    "requiresDocker": true,
+    "prompt": "Work out the SHA-256 of a file in the Tool's own workspace by running a command. The only argument is `path`, a path relative to that directory. Declare the Manifest {\"fs\": \"workspace\", \"exec\": true}, which runs the Tool in a container with that directory mounted at /workspace, the working directory a command starts in. Use `await ctx.exec(command)`, which answers `{ok, code, signal, stdout, stderr, durationMs}`, and run `sha256sum` over the file. Return the 64-character lower-case hex digest as a string and nothing else. The workspace directory holds exactly this tree, and nothing else, when the Tool is saved:\n  README.md   3 lines: \"# workspace\", \"the second line\", \"the third line\"\n  notes.txt   3 lines: \"the first line\", \"the second line\", \"the third line\"\n  log.txt     1 line: \"the first entry\"\n  data.csv    3 lines: \"name,age\", \"ada,36\", \"grace,45\"\n  hash.txt    1 line: \"the line only this file holds\"\n  notes/      a directory holding one file, a.txt, of 2 lines: \"alpha\", \"beta\"\nEvery file ends with a newline. Write every Example against a path that is really in that tree, and never invent a file or a directory: a path that is not there is refused and nothing is saved. Write your Examples against these four files, whose contents no other Tool changes, and whose digests are:\n  README.md   b234384c46e14c5865c7c2f39379eb7f11171798b302752a0976a708bc7dbe5d\n  notes.txt   145b5c5c5ea2bad3417baf68546bc680d162e5a0ad59d1fb1b4dcc1149e8d45c\n  data.csv    61628ffde4f621d378066c679388edb32c2ea6b4d222f0e348e0137303ecdab5\n  notes/a.txt e49c81e2d2f84e259d40e2fb8192f3bcd198b355184845d76d8f58807d0d78ee\nNever write an Example against log.txt: another Tool appends to it, so its digest does not stay the same. Never write an Example against hash.txt either: its digest is not given to you, and an Example whose expected result you cannot know refuses the whole Tool.",
+    "probe": {
+      "path": "hash.txt"
+    },
+    "expect": "9dcc0db76c8acd48fd3e1d502f45a124304fc90d396a0490b4c1de13bfc347a3"
+  }
+]
