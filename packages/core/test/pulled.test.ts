@@ -54,9 +54,13 @@ async function declare(
   }
 }
 
+// A machine that runs these may have no git identity of its own, and these commits are not flintd's:
+// they stand in for another Library that pushed.
+const AS_SOMEONE = ["-c", "user.name=someone", "-c", "user.email=someone@example.test"]
+
 async function commitAndPush(dir: string, subject: string): Promise<void> {
   await run("git", ["add", "-A"], { cwd: dir })
-  await run("git", ["commit", "-m", subject], { cwd: dir })
+  await run("git", [...AS_SOMEONE, "commit", "-m", subject], { cwd: dir })
   await run("git", ["push", "origin", "main"], { cwd: dir })
 }
 
@@ -83,7 +87,7 @@ test("a Version another Library pushed keeps Verified and Active only on evidenc
   await declare(theirs, "word_count", "active", PASSED)
   await declare(theirs, "second_tool", "verified", null)
   await run("git", ["add", "-A"], { cwd: theirs })
-  await run("git", ["commit", "-m", "update(word_count): agent"], { cwd: theirs })
+  await run("git", [...AS_SOMEONE, "commit", "-m", "update(word_count): agent"], { cwd: theirs })
   await run("git", ["push", "origin", "main"], { cwd: theirs })
 
   const second = await started(mine, origin)
