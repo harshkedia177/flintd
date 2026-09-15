@@ -1,0 +1,61 @@
+{
+  "name": "@flintd/sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Build your agent loop on a library of tools the model writes for itself: one client, embedded in your process or against the flintd daemon.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshkedia177/flintd.git",
+    "directory": "packages/sdk"
+  },
+  "author": "flintd contributors",
+  "homepage": "https://github.com/harshkedia177/flintd",
+  "bugs": {
+    "url": "https://github.com/harshkedia177/flintd/issues"
+  },
+  "keywords": [
+    "ai-agents",
+    "agent-tools",
+    "tool-use",
+    "mcp",
+    "llm",
+    "typescript"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 \"test/*.test.ts\""
+  },
+  "dependencies": {
+    "@flintd/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@ai-sdk/provider-utils": "5.0.40",
+    "@anthropic-ai/sdk": "0.125.0",
+    "@google/genai": "2.22.0",
+    "@modelcontextprotocol/client": "2.0.0",
+    "ai": "7.0.99",
+    "flintd": "workspace:*",
+    "openai": "7.15.0"
+  }
+}
