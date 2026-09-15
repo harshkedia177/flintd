@@ -1,0 +1,1223 @@
+{
+  "note": "One fixture set for the two emitters. packages/core/test/format-parity.test.ts and python/tests/test_parity.py both read this file and assert their own emitter answers `expected`, so neither can drift without the other failing.",
+  "tools": [
+    {
+      "name": "tool_create",
+      "description": "A meta tool keeps its own name at every export boundary.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "word_count",
+      "description": "A closed object whose every property is required, which is what strict asks for.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The text to count."
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "titled_text",
+      "description": "The five keywords structured outputs does not take, and the counts a genai Schema spells as strings.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "maxLength": 500,
+            "minLength": 2,
+            "default": "a"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false,
+        "examples": [
+          {
+            "text": "one"
+          }
+        ]
+      }
+    },
+    {
+      "name": "maybe_nothing",
+      "description": "A node that says type null, which structured outputs has no type for.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "held": {
+            "type": "null"
+          }
+        },
+        "required": [
+          "held"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "counted_list",
+      "description": "An array with the item counts on it, and a result schema the gemini shape carries as response.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,
+            "items": {
+              "type": "string",
+              "maxLength": 20
+            }
+          }
+        },
+        "required": [
+          "parts"
+        ],
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "joined": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "joined"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "graded_answer",
+      "description": "An enum of numbers moves into the description, and an enum of strings on a string stays where it is.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "integer",
+            "enum": [
+              1,
+              2,
+              3
+            ],
+            "description": "How good it was."
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail"
+            ]
+          },
+          "mixed": {
+            "enum": [
+              "one",
+              2,
+              true
+            ]
+          }
+        },
+        "required": [
+          "score",
+          "grade",
+          "mixed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "deep_nest",
+      "description": "Eleven levels of object, which is one more than structured outputs nests.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "object",
+            "properties": {
+              "b": {
+                "type": "object",
+                "properties": {
+                  "c": {
+                    "type": "object",
+                    "properties": {
+                      "d": {
+                        "type": "object",
+                        "properties": {
+                          "e": {
+                            "type": "object",
+                            "properties": {
+                              "f": {
+                                "type": "object",
+                                "properties": {
+                                  "g": {
+                                    "type": "object",
+                                    "properties": {
+                                      "h": {
+                                        "type": "object",
+                                        "properties": {
+                                          "i": {
+                                            "type": "object",
+                                            "properties": {
+                                              "j": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "j"
+                                            ],
+                                            "additionalProperties": false
+                                          }
+                                        },
+                                        "required": [
+                                          "i"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "h"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "required": [
+                                  "g"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "f"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "e"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "d"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "c"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "b"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "a"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "expected": {
+    "anthropic": [
+      {
+        "name": "tool_create",
+        "description": "A meta tool keeps its own name at every export boundary.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "fl_word_count",
+        "description": "A closed object whose every property is required, which is what strict asks for.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text to count."
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "fl_titled_text",
+        "description": "The five keywords structured outputs does not take, and the counts a genai Schema spells as strings.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": "Text",
+              "maxLength": 500,
+              "minLength": 2,
+              "default": "a"
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false,
+          "examples": [
+            {
+              "text": "one"
+            }
+          ]
+        }
+      },
+      {
+        "name": "fl_maybe_nothing",
+        "description": "A node that says type null, which structured outputs has no type for.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "held": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "held"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "fl_counted_list",
+        "description": "An array with the item counts on it, and a result schema the gemini shape carries as response.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "parts": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 5,
+              "items": {
+                "type": "string",
+                "maxLength": 20
+              }
+            }
+          },
+          "required": [
+            "parts"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "fl_graded_answer",
+        "description": "An enum of numbers moves into the description, and an enum of strings on a string stays where it is.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "integer",
+              "enum": [
+                1,
+                2,
+                3
+              ],
+              "description": "How good it was."
+            },
+            "grade": {
+              "type": "string",
+              "enum": [
+                "pass",
+                "fail"
+              ]
+            },
+            "mixed": {
+              "enum": [
+                "one",
+                2,
+                true
+              ]
+            }
+          },
+          "required": [
+            "score",
+            "grade",
+            "mixed"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "fl_deep_nest",
+        "description": "Eleven levels of object, which is one more than structured outputs nests.",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "object",
+              "properties": {
+                "b": {
+                  "type": "object",
+                  "properties": {
+                    "c": {
+                      "type": "object",
+                      "properties": {
+                        "d": {
+                          "type": "object",
+                          "properties": {
+                            "e": {
+                              "type": "object",
+                              "properties": {
+                                "f": {
+                                  "type": "object",
+                                  "properties": {
+                                    "g": {
+                                      "type": "object",
+                                      "properties": {
+                                        "h": {
+                                          "type": "object",
+                                          "properties": {
+                                            "i": {
+                                              "type": "object",
+                                              "properties": {
+                                                "j": {
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "j"
+                                              ],
+                                              "additionalProperties": false
+                                            }
+                                          },
+                                          "required": [
+                                            "i"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "required": [
+                                        "h"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "g"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "f"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "e"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "d"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "c"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "b"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "a"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ],
+    "openai": [
+      {
+        "type": "function",
+        "name": "tool_create",
+        "description": "A meta tool keeps its own name at every export boundary.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      },
+      {
+        "type": "function",
+        "name": "fl_word_count",
+        "description": "A closed object whose every property is required, which is what strict asks for.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text to count."
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      },
+      {
+        "type": "function",
+        "name": "fl_titled_text",
+        "description": "The five keywords structured outputs does not take, and the counts a genai Schema spells as strings.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": "Text",
+              "maxLength": 500,
+              "minLength": 2,
+              "default": "a"
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false,
+          "examples": [
+            {
+              "text": "one"
+            }
+          ]
+        },
+        "strict": false
+      },
+      {
+        "type": "function",
+        "name": "fl_maybe_nothing",
+        "description": "A node that says type null, which structured outputs has no type for.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "held": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "held"
+          ],
+          "additionalProperties": false
+        },
+        "strict": false
+      },
+      {
+        "type": "function",
+        "name": "fl_counted_list",
+        "description": "An array with the item counts on it, and a result schema the gemini shape carries as response.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "parts": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 5,
+              "items": {
+                "type": "string",
+                "maxLength": 20
+              }
+            }
+          },
+          "required": [
+            "parts"
+          ],
+          "additionalProperties": false
+        },
+        "strict": false
+      },
+      {
+        "type": "function",
+        "name": "fl_graded_answer",
+        "description": "An enum of numbers moves into the description, and an enum of strings on a string stays where it is.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "integer",
+              "enum": [
+                1,
+                2,
+                3
+              ],
+              "description": "How good it was."
+            },
+            "grade": {
+              "type": "string",
+              "enum": [
+                "pass",
+                "fail"
+              ]
+            },
+            "mixed": {
+              "enum": [
+                "one",
+                2,
+                true
+              ]
+            }
+          },
+          "required": [
+            "score",
+            "grade",
+            "mixed"
+          ],
+          "additionalProperties": false
+        },
+        "strict": true
+      },
+      {
+        "type": "function",
+        "name": "fl_deep_nest",
+        "description": "Eleven levels of object, which is one more than structured outputs nests.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "object",
+              "properties": {
+                "b": {
+                  "type": "object",
+                  "properties": {
+                    "c": {
+                      "type": "object",
+                      "properties": {
+                        "d": {
+                          "type": "object",
+                          "properties": {
+                            "e": {
+                              "type": "object",
+                              "properties": {
+                                "f": {
+                                  "type": "object",
+                                  "properties": {
+                                    "g": {
+                                      "type": "object",
+                                      "properties": {
+                                        "h": {
+                                          "type": "object",
+                                          "properties": {
+                                            "i": {
+                                              "type": "object",
+                                              "properties": {
+                                                "j": {
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "j"
+                                              ],
+                                              "additionalProperties": false
+                                            }
+                                          },
+                                          "required": [
+                                            "i"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "required": [
+                                        "h"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "g"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "f"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "e"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "d"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "c"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "b"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "a"
+          ],
+          "additionalProperties": false
+        },
+        "strict": false
+      }
+    ],
+    "openai-chat": [
+      {
+        "type": "function",
+        "function": {
+          "name": "tool_create",
+          "description": "A meta tool keeps its own name at every export boundary.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          "strict": true
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "fl_word_count",
+          "description": "A closed object whose every property is required, which is what strict asks for.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "The text to count."
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "strict": true
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "fl_titled_text",
+          "description": "The five keywords structured outputs does not take, and the counts a genai Schema spells as strings.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "title": "Text",
+                "maxLength": 500,
+                "minLength": 2,
+                "default": "a"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "additionalProperties": false,
+            "examples": [
+              {
+                "text": "one"
+              }
+            ]
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "fl_maybe_nothing",
+          "description": "A node that says type null, which structured outputs has no type for.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "held": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "held"
+            ],
+            "additionalProperties": false
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "fl_counted_list",
+          "description": "An array with the item counts on it, and a result schema the gemini shape carries as response.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "parts": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 5,
+                "items": {
+                  "type": "string",
+                  "maxLength": 20
+                }
+              }
+            },
+            "required": [
+              "parts"
+            ],
+            "additionalProperties": false
+          },
+          "strict": false
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "fl_graded_answer",
+          "description": "An enum of numbers moves into the description, and an enum of strings on a string stays where it is.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "score": {
+                "type": "integer",
+                "enum": [
+                  1,
+                  2,
+                  3
+                ],
+                "description": "How good it was."
+              },
+              "grade": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "fail"
+                ]
+              },
+              "mixed": {
+                "enum": [
+                  "one",
+                  2,
+                  true
+                ]
+              }
+            },
+            "required": [
+              "score",
+              "grade",
+              "mixed"
+            ],
+            "additionalProperties": false
+          },
+          "strict": true
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "fl_deep_nest",
+          "description": "Eleven levels of object, which is one more than structured outputs nests.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "object",
+                "properties": {
+                  "b": {
+                    "type": "object",
+                    "properties": {
+                      "c": {
+                        "type": "object",
+                        "properties": {
+                          "d": {
+                            "type": "object",
+                            "properties": {
+                              "e": {
+                                "type": "object",
+                                "properties": {
+                                  "f": {
+                                    "type": "object",
+                                    "properties": {
+                                      "g": {
+                                        "type": "object",
+                                        "properties": {
+                                          "h": {
+                                            "type": "object",
+                                            "properties": {
+                                              "i": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "j": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "j"
+                                                ],
+                                                "additionalProperties": false
+                                              }
+                                            },
+                                            "required": [
+                                              "i"
+                                            ],
+                                            "additionalProperties": false
+                                          }
+                                        },
+                                        "required": [
+                                          "h"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "g"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "required": [
+                                  "f"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "e"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "d"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "c"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "b"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "a"
+            ],
+            "additionalProperties": false
+          },
+          "strict": false
+        }
+      }
+    ],
+    "gemini": [
+      {
+        "name": "tool_create",
+        "description": "A meta tool keeps its own name at every export boundary.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      },
+      {
+        "name": "fl_word_count",
+        "description": "A closed object whose every property is required, which is what strict asks for.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text to count."
+            }
+          },
+          "required": [
+            "text"
+          ]
+        },
+        "response": {
+          "type": "object",
+          "properties": {
+            "count": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      {
+        "name": "fl_titled_text",
+        "description": "The five keywords structured outputs does not take, and the counts a genai Schema spells as strings.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": "Text",
+              "maxLength": "500",
+              "minLength": "2",
+              "default": "a"
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      },
+      {
+        "name": "fl_maybe_nothing",
+        "description": "A node that says type null, which structured outputs has no type for.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "held": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "held"
+          ]
+        }
+      },
+      {
+        "name": "fl_counted_list",
+        "description": "An array with the item counts on it, and a result schema the gemini shape carries as response.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "parts": {
+              "type": "array",
+              "minItems": "1",
+              "maxItems": "5",
+              "items": {
+                "type": "string",
+                "maxLength": "20"
+              }
+            }
+          },
+          "required": [
+            "parts"
+          ]
+        },
+        "response": {
+          "type": "object",
+          "properties": {
+            "joined": {
+              "type": "string",
+              "maxLength": "120"
+            }
+          },
+          "required": [
+            "joined"
+          ]
+        }
+      },
+      {
+        "name": "fl_graded_answer",
+        "description": "An enum of numbers moves into the description, and an enum of strings on a string stays where it is.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "integer",
+              "description": "How good it was. One of: 1, 2, 3."
+            },
+            "grade": {
+              "type": "string",
+              "enum": [
+                "pass",
+                "fail"
+              ]
+            },
+            "mixed": {
+              "description": "One of: \"one\", 2, true."
+            }
+          },
+          "required": [
+            "score",
+            "grade",
+            "mixed"
+          ]
+        }
+      },
+      {
+        "name": "fl_deep_nest",
+        "description": "Eleven levels of object, which is one more than structured outputs nests.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "object",
+              "properties": {
+                "b": {
+                  "type": "object",
+                  "properties": {
+                    "c": {
+                      "type": "object",
+                      "properties": {
+                        "d": {
+                          "type": "object",
+                          "properties": {
+                            "e": {
+                              "type": "object",
+                              "properties": {
+                                "f": {
+                                  "type": "object",
+                                  "properties": {
+                                    "g": {
+                                      "type": "object",
+                                      "properties": {
+                                        "h": {
+                                          "type": "object",
+                                          "properties": {
+                                            "i": {
+                                              "type": "object",
+                                              "properties": {
+                                                "j": {
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "j"
+                                              ]
+                                            }
+                                          },
+                                          "required": [
+                                            "i"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "h"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "g"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "f"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "e"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "d"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "c"
+                  ]
+                }
+              },
+              "required": [
+                "b"
+              ]
+            }
+          },
+          "required": [
+            "a"
+          ]
+        }
+      }
+    ]
+  }
+}
