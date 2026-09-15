@@ -1,0 +1,71 @@
+{
+  "name": "@flintd/core",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The flintd engine: the tool store, the save gate, the execution tiers, the proxy and retrieval. Most loops want @flintd/sdk instead.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshkedia177/flintd.git",
+    "directory": "packages/core"
+  },
+  "author": "flintd contributors",
+  "homepage": "https://github.com/harshkedia177/flintd",
+  "bugs": {
+    "url": "https://github.com/harshkedia177/flintd/issues"
+  },
+  "keywords": [
+    "ai-agents",
+    "agent-tools",
+    "tool-use",
+    "mcp",
+    "sandbox",
+    "code-execution"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "THIRD-PARTY-NOTICES.md"
+  ],
+  "scripts": {
+    "build": "node --disable-warning=ExperimentalWarning scripts/build-bundle.ts && tsc -p tsconfig.build.json && node --disable-warning=ExperimentalWarning scripts/build-runtime-paths.ts",
+    "prepare": "pnpm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm run test:fast && pnpm run test:tiers && pnpm run test:container && pnpm run test:store && pnpm run test:library",
+    "test:fast": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 $(ls test/*.test.ts | grep -vE 'test/(approvals|bundle|compose|container|concurrency|executor|held-out|library|limits|manifest|node-tier|observer|proxy|pulled|sync|worker-environment)\\.test\\.ts$')",
+    "test:tiers": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 test/bundle.test.ts test/compose.test.ts test/executor.test.ts test/limits.test.ts test/manifest.test.ts test/node-tier.test.ts test/proxy.test.ts test/worker-environment.test.ts",
+    "test:container": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 test/container.test.ts",
+    "test:store": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 test/approvals.test.ts test/concurrency.test.ts test/observer.test.ts test/pulled.test.ts",
+    "test:library": "node --disable-warning=ExperimentalWarning --test --test-concurrency=4 test/held-out.test.ts test/library.test.ts test/sync.test.ts"
+  },
+  "dependencies": {
+    "acorn": "8.18.0",
+    "cheerio": "1.2.0",
+    "date-fns": "4.4.0",
+    "jsonpath-plus": "10.4.0",
+    "lodash-es": "4.18.1",
+    "marked": "18.0.13",
+    "papaparse": "5.7.0",
+    "quickjs-emscripten": "0.32.0",
+    "yaml": "2.9.1",
+    "zod": "4.6.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}
