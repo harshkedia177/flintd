@@ -309,6 +309,9 @@ describe("retrieval", { concurrency: true }, () => {
       assert.deepEqual(names(await flint.find("count the words in a sentence")), ["word_count"])
       const waited = Date.now() - searched
       assert.ok(waited < 800, `the search waited ${waited} ms for a pass that had not finished`)
+      // The Held-out run this start() began is not what is under test, and a Library closed underneath it says so
+      // in the same words the embedding pass would. Let it settle, so the assertion below can only be about the pass.
+      await verified(flint, "word_count")
       await flint.stop()
     } finally {
       await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 20 })
