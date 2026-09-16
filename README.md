@@ -3,6 +3,7 @@
 [![gate](https://github.com/harshkedia177/flintd/actions/workflows/gate.yml/badge.svg)](https://github.com/harshkedia177/flintd/actions/workflows/gate.yml)
 [![@flintd/sdk](https://img.shields.io/npm/v/%40flintd%2Fsdk?label=%40flintd%2Fsdk)](https://www.npmjs.com/package/@flintd/sdk)
 [![flintd](https://img.shields.io/npm/v/flintd?label=flintd)](https://www.npmjs.com/package/flintd)
+[![PyPI](https://img.shields.io/pypi/v/flintd?label=pypi)](https://pypi.org/project/flintd/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 **A library of tools your agent writes for itself, tested before anything can call them.**
