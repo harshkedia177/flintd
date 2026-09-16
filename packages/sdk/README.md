@@ -11,7 +11,7 @@ npm i @flintd/sdk
 ```
 
 One client, two modes. `createFlint({ dir })` opens a Library in this process; `createFlint({ url, token })` talks to
-a daemon — the same one every harness on the machine talks to. Both answer the same `Flint` interface, method for
+a daemon, the same one every harness on the machine talks to. Both answer the same `Flint` interface, method for
 method, and every method answers a promise.
 
 ```ts
@@ -118,7 +118,7 @@ it: the embedded client runs the watcher as soon as a Manifest starts waiting, a
 call of its own comes back `awaiting_approval`, with the request as `GET /api/v1/approvals` holds it. Either way the
 watcher decides with `approve(id, note?)` or `deny(id, note?)`.
 
-`onLog` is an option of the embedded client — `createFlint({ dir, onLog })` — and it is where `ctx.log` lines arrive,
+`onLog` is an option of the embedded client, `createFlint({ dir, onLog })`, and it is where `ctx.log` lines arrive,
 redacted, as `{tool, callId, message}`. A remote client has no log stream of its own: the daemon writes those lines,
 and `flintd serve --verbose` puts them on stdout.
 

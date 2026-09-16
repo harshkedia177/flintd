@@ -110,16 +110,16 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # Each package names this repository, this workflow and this environment as its trusted publisher, so the run
+      # authenticates with a short-lived credential and the project holds no npm token. Provenance is automatic
+      # under trusted publishing, so no flag asks for it.
       # npm and PyPI are separate jobs so one can fail without the other, which makes a re-run of this job the
       # ordinary way to finish a half-done release. A version already on the registry is therefore skipped rather
       # than treated as an error: publishing is what has to happen, not this particular attempt doing it.
-      # `--provenance` signs each tarball against this run's OIDC token, which is what `id-token: write` grants.
       # `flintd` depends on all four, and packages/sdk keeps a devDependency on `flintd` for the daemon its tests
       # drive, so the workspace holds one cycle and no topological sort covers both. The libraries go first.
       - name: publish every package the registry does not already hold
         shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
           publish() {
@@ -130,7 +130,7 @@ jobs:
               echo "$name@$version is already on the registry, skipping"
               return
             fi
-            pnpm --filter "$name" publish --access public --no-git-checks --provenance
+            pnpm --filter "$name" publish --access public --no-git-checks
           }
           for dir in packages/core packages/hooks packages/pi packages/sdk; do publish "$dir"; done
           publish packages/daemon

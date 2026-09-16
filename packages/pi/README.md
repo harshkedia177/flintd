@@ -39,13 +39,13 @@ Write `<flintd home>/pi.json` when the daemon is somewhere else:
 {"url": "http://127.0.0.1:3546/mcp", "tokenFile": "token"}
 ```
 
-A key this extension does not read is refused by name at session start. A file that holds a token — `pi.json` with
-a `token` key, or the token file itself — must not be readable by other users: run `chmod 600` on it, which is the
+A key this extension does not read is refused by name at session start. A file that holds a token, `pi.json` with
+a `token` key or the token file itself, must not be readable by other users: run `chmod 600` on it, which is the
 mode `flintd serve` writes its own token file with.
 
 ## What it registers
 
-- `tool_create`, `tool_update`, `tool_read`, `tool_find`, `tool_run`, `tool_retire`, `tool_history` — the meta
+- `tool_create`, `tool_update`, `tool_read`, `tool_find`, `tool_run`, `tool_retire`, `tool_history`: the meta
   tools, with the daemon's own argument schemas.
 - `fl_<name>` for every Active Tool, with the Tool's own argument schema and description.
 

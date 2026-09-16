@@ -1,7 +1,12 @@
 # flintd for Python
 
-The Python client of a flintd daemon: the Tools an agent writes for itself, in the shape each provider asks for.
-It is remote-only — a URL and a token — and the client itself needs nothing but the standard library.
+The Python client of a [flintd](https://github.com/harshkedia177/flintd) daemon: the Tools an agent writes for
+itself, in the shape each provider asks for. It is remote-only, a URL and a token, and the client itself needs
+nothing but the standard library.
+
+flintd is a Library of Tools that agents write for themselves. A Tool runs its own Examples before anything is
+saved, passes Examples its author never saw before search returns it, and earns a place in the model's tool list
+only on real use. One daemon serves that Library to every coding agent on the machine and to your own loop.
 
 ```
 uv add flintd                    # the client
@@ -27,7 +32,7 @@ flint.call("word_count", {"text": "one two"})
 Every method answers the daemon's own payload, and every refusal is a `ToolError` carrying the daemon's stable
 `code`, its `message` and its `details`. A code this build does not know reads as `internal_error`. A daemon that
 cannot be reached, or that did not answer in time, raises `TransportError`, a `ToolError` whose code is
-`transport_failed` — the one code no daemon ever sends, so a refusal of a Tool is never confused with a daemon that
+`transport_failed` is the one code no daemon ever sends, so a refusal of a Tool is never confused with a daemon that
 is not there. Nothing was run and no call was recorded.
 
 | Method | What it does |
@@ -61,7 +66,7 @@ Library carries `fl_`; a stored name is at most 60 characters, so `fl_` still fi
 | `"gemini"` | the `functionDeclarations` of one `tools` entry: `{name, description, parameters}`, and `response` when the Tool declares a result schema, all in Gemini's schema subset |
 
 `strict` is `true` only for a closed object schema whose every property is required, nested no deeper than ten
-levels, with no node typed `null` and no node carrying `minLength`, `maxLength`, `title`, `default` or `examples` —
+levels, with no node typed `null` and no node carrying `minLength`, `maxLength`, `title`, `default` or `examples`,
 which is what OpenAI's structured outputs holds a strict tool to. The Gemini schema carries no
 `additionalProperties` and no `examples`; it writes `minItems`, `maxItems`, `minLength` and `maxLength` as strings,
 the way proto JSON writes an int64, and it moves an `enum` that is not a list of strings on a string into the
@@ -82,8 +87,8 @@ answered = flint.call_from(block, "anthropic")  # {"type": "tool_result", "tool_
 messages.append({"role": "user", "content": [answered]})
 ```
 
-A refusal goes into the provider's own error slot — `is_error` for Anthropic, the output string for OpenAI, the
-`response.error` object for Gemini — so the model reads the refusal and acts on it rather than the run ending.
+A refusal goes into the provider's own error slot, `is_error` for Anthropic, the output string for OpenAI and the
+`response.error` object for Gemini, so the model reads the refusal and acts on it rather than the run ending.
 
 ## Pydantic AI
 
@@ -118,3 +123,9 @@ uv run ruff check
 uv run ruff format --check
 uv run mypy --strict src tests examples
 ```
+
+## More
+
+- [The project](https://github.com/harshkedia177/flintd), and [what it is for](https://github.com/harshkedia177/flintd#readme)
+- [The REST contract](https://github.com/harshkedia177/flintd/blob/main/docs/rest-contract.md), which this client implements
+- [The daemon quickstart](https://github.com/harshkedia177/flintd/blob/main/docs/quickstarts/daemon.md), for starting the daemon this client talks to

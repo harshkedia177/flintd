@@ -15,7 +15,7 @@ One run posts one Observation to the daemon: the harness, the session, the tool 
 arguments and whether it worked. **No argument value is ever sent.** The transcript path travels only where the
 operator answered `--transcripts yes` for that harness.
 
-The binary gives the daemon 500 ms, writes nothing to stdout — a harness reads what a hook prints as a decision —
+The binary gives the daemon 500 ms, writes nothing to stdout, because a harness reads what a hook prints as a decision,
 and exits 0 whatever happened, so a daemon that is not running costs a turn nothing.
 
 What it sends, and what the Observer does with it, is in
