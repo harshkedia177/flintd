@@ -1,6 +1,8 @@
 # flintd
 
 [![gate](https://github.com/harshkedia177/flintd/actions/workflows/gate.yml/badge.svg)](https://github.com/harshkedia177/flintd/actions/workflows/gate.yml)
+[![@flintd/sdk](https://img.shields.io/npm/v/%40flintd%2Fsdk?label=%40flintd%2Fsdk)](https://www.npmjs.com/package/@flintd/sdk)
+[![flintd](https://img.shields.io/npm/v/flintd?label=flintd)](https://www.npmjs.com/package/flintd)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 **A library of tools your agent writes for itself, tested before anything can call them.**
@@ -157,11 +159,17 @@ Start at [**docs/**](docs/) for the full index.
 
 ## Install
 
-```
-npm i @flintd/sdk        # the client your own loop imports, embedded or remote
-npm i -g flintd          # the daemon and the CLI
-pip install flintd       # the Python client, remote only
-```
+You install one of these. Which one depends on [which flintd you need](#which-one-do-i-need).
+
+| Package | Install | For |
+| --- | --- | --- |
+| [`@flintd/sdk`](https://www.npmjs.com/package/@flintd/sdk) | `npm i @flintd/sdk` | your own agent loop, embedded or remote |
+| [`flintd`](https://www.npmjs.com/package/flintd) | `npm i -g flintd` | the daemon and the CLI, for a coding agent |
+| [`flintd`](https://pypi.org/project/flintd/) | `pip install flintd` | a Python loop, remote only |
+
+Two more are published and nobody installs them on purpose:
+[`@flintd/core`](https://www.npmjs.com/package/@flintd/core) is the engine both clients pull in, and
+[`@flintd/pi`](https://www.npmjs.com/package/@flintd/pi) is fetched by pi's own extension loader.
 
 Node 22.18 or newer. The container tier needs an engine that answers the `docker` command line.
 

@@ -90,6 +90,12 @@ jobs:
   npm:
     name: npm
     needs: gate
+    # Named so npm's trusted publisher can be bound to it once each package exists. Until then the token below is
+    # what authenticates, and the first release of a package is the only one that can use one: npm's setting lives
+    # on a package, and a package that has never been published has no settings.
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/flintd
     permissions:
       contents: read
       id-token: write
@@ -118,6 +124,14 @@ jobs:
     name: pypi
     needs: gate
     runs-on: ubuntu-latest
+    # PyPI's trusted publisher is bound to this repository, this workflow file and this environment name. It issues
+    # a short-lived credential for the run, so the project holds no token at all and uv finds it without a flag.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/flintd
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.1.0
@@ -127,5 +141,3 @@ jobs:
         working-directory: python
       - run: uv publish
         working-directory: python
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
