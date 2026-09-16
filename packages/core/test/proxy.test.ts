@@ -166,6 +166,9 @@ describe("the Proxy", () => {
   let service: Upstream
   let flint: Flint
   let tight: Flint
+  // Two bounds, because one test needs a size cap on a response that must arrive, and another needs a clock on a
+  // response that never will. Sharing a 200 ms clock made a slow runner refuse the big body for the wrong reason.
+  let capped: Flint
   let logged: string[] = []
   const dirs: string[] = []
   const files: string[] = []
@@ -190,15 +193,19 @@ describe("the Proxy", () => {
     service = await upstream()
     flint = await open()
     tight = await open({ fetchTimeoutMs: 200, maxFetchBytes: 2048, callTimeoutMs: 4000 })
+    capped = await open({ maxFetchBytes: 2048, callTimeoutMs: 8000 })
     await fetchTool(flint, "fetch_tool")
     await approve(flint, "fetch_tool")
     await fetchTool(tight, "tight_tool")
     await approve(tight, "tight_tool")
+    await fetchTool(capped, "capped_tool")
+    await approve(capped, "capped_tool")
   })
 
   after(async () => {
     await flint.stop()
     await tight.stop()
+    await capped.stop()
     await service.close()
     for (const dir of dirs) await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 20 })
     for (const file of files) await rm(file, { force: true })
@@ -291,11 +298,11 @@ describe("the Proxy", () => {
   })
 
   test("the Proxy holds the answer to a size and gives up on an upstream that never answers", async () => {
-    const large = (await tight.call("tight_tool", { url: `${service.origin}/big` })) as { refused: string }
-    assert.match(large.refused, /sent tight_tool more than 2048 bytes/)
+    const large = (await capped.call("capped_tool", { url: `${service.origin}/big` })) as { refused: string }
+    assert.match(large.refused, /sent capped_tool more than 2048 bytes/)
     // The cap counts what the reader yields, which is what undici has already inflated, not what crossed the wire.
-    const packed = (await tight.call("tight_tool", { url: `${service.origin}/gzip` })) as { refused: string }
-    assert.match(packed.refused, /sent tight_tool more than 2048 bytes/)
+    const packed = (await capped.call("capped_tool", { url: `${service.origin}/gzip` })) as { refused: string }
+    assert.match(packed.refused, /sent capped_tool more than 2048 bytes/)
     const slow = (await tight.call("tight_tool", { url: `${service.origin}/slow` })) as { refused: string }
     assert.match(slow.refused, /did not answer tight_tool within 200 ms/)
     // An upstream that sends its headers and then stops is the same timeout, with the same guidance.
