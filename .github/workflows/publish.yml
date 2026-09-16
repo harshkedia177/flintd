@@ -110,15 +110,30 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # npm and PyPI are separate jobs so one can fail without the other, which makes a re-run of this job the
+      # ordinary way to finish a half-done release. A version already on the registry is therefore skipped rather
+      # than treated as an error: publishing is what has to happen, not this particular attempt doing it.
       # `--provenance` signs each tarball against this run's OIDC token, which is what `id-token: write` grants.
       # `flintd` depends on all four, and packages/sdk keeps a devDependency on `flintd` for the daemon its tests
       # drive, so the workspace holds one cycle and no topological sort covers both. The libraries go first.
-      - run: pnpm --filter "@flintd/*" publish --access public --no-git-checks --provenance
+      - name: publish every package the registry does not already hold
+        shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: pnpm --filter flintd publish --access public --no-git-checks --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          publish() {
+            local name version
+            name="$(node -p "require('./$1/package.json').name")"
+            version="$(node -p "require('./$1/package.json').version")"
+            if npm view "$name@$version" version > /dev/null 2>&1; then
+              echo "$name@$version is already on the registry, skipping"
+              return
+            fi
+            pnpm --filter "$name" publish --access public --no-git-checks --provenance
+          }
+          for dir in packages/core packages/hooks packages/pi packages/sdk; do publish "$dir"; done
+          publish packages/daemon
 
   pypi:
     name: pypi
